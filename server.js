@@ -8,10 +8,6 @@ const PORT = process.env.PORT || 3000;
 app.use(cors()); // Enable CORS
 app.use(express.json()); // Middleware to parse JSON bodies
 
-// Root endpoint for basic verification
-app.get('/', (req, res) => {
-    res.send('Hello, world!');
-});
 
 // Fetching all questions with their options
 app.get('/api/questions', async (req, res) => {
