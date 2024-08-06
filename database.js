@@ -1,3 +1,4 @@
+require('dotenv').config(); // Ensure this is at the top
 const mysql = require('mysql2/promise');
 
 // Connection configuration with promise support
