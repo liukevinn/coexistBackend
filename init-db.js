@@ -25,6 +25,7 @@ const { pool } = require("./database");
         option_text VARCHAR(255) NOT NULL,
         count INT DEFAULT 0,
         question_id INT,
+        points INT DEFAULT 0,
         FOREIGN KEY (question_id) REFERENCES questions(id)
       )
     `);
