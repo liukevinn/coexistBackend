@@ -38,14 +38,16 @@ app.post("/api/responses/:optionId", async (req, res) => {
       "SELECT SUM(count) AS total_value FROM options WHERE question_id = ?",
       [option?.[0]?.question_id]
     );
+    const [options] = await db.query(
+      "SELECT * FROM options WHERE question_id = ?",
+      [req.params.questionId]
+    );
     const totalValue = result[0]?.total_value ?? 0;
-    res.status(201).json({
-      ...option?.[0],
-      percentage:
-        option?.[0]?.count > 0
-          ? ((option?.[0]?.count / totalValue) * 100).toFixed(2)
-          : 0,
-    });
+    const optionsMapped = options.map((o) => ({
+      ...o,
+      percentage: o?.count > 0 ? ((o?.count / totalValue) * 100).toFixed(2) : 0,
+    }));
+    res.status(201).json(optionsMapped);
   } catch (error) {
     res.status(500).json({ message: "Database error", error: error.message });
   }
