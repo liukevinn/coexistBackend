@@ -40,10 +40,10 @@ app.post("/api/responses/:optionId", async (req, res) => {
     );
     const [options] = await db.query(
       "SELECT * FROM options WHERE question_id = ?",
-      [req.params.questionId]
+      [option?.[0]?.question_id]
     );
     const totalValue = result[0]?.total_value ?? 0;
-    const optionsMapped = options.map((o) => ({
+    const optionsMapped = options?.map((o) => ({
       ...o,
       percentage: o?.count > 0 ? ((o?.count / totalValue) * 100).toFixed(2) : 0,
     }));
