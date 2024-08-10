@@ -11,14 +11,9 @@ app.use(express.json()); // Middleware to parse JSON bodies
 // Fetching all questions with their options
 app.get("/api/questions", async (req, res) => {
   try {
-    const [questions] = await db.query("SELECT * FROM questions");
-    for (let question of questions) {
-      const [options] = await db.query(
-        "SELECT * FROM options WHERE question_id = ?",
-        [question.id]
-      );
-      question.options = options;
-    }
+    const [questions] = await db.query(
+      "SELECT id, question_text FROM questions"
+    );
     res.json(questions);
   } catch (error) {
     res.status(500).json({ message: "Database error", error: error.message });
@@ -36,7 +31,21 @@ app.post("/api/responses/:optionId", async (req, res) => {
     await db.query("UPDATE options SET count = count + 1 WHERE id = ?", [
       optionId,
     ]);
-    res.status(201).json({ message: "Response recorded" });
+    const [option] = await db.query("SELECT * FROM options WHERE id = ?", [
+      optionId,
+    ]);
+    const [result] = await db.query(
+      "SELECT SUM(count) AS total_value FROM options WHERE question_id = ?",
+      [option?.[0]?.question_id]
+    );
+    const totalValue = result[0]?.total_value ?? 0;
+    res.status(201).json({
+      ...option?.[0],
+      percentage:
+        option?.[0]?.count > 0
+          ? ((option?.[0]?.count / totalValue) * 100).toFixed(2)
+          : 0,
+    });
   } catch (error) {
     res.status(500).json({ message: "Database error", error: error.message });
   }
@@ -46,10 +55,19 @@ app.post("/api/responses/:optionId", async (req, res) => {
 app.get("/api/responses/:questionId", async (req, res) => {
   try {
     const [options] = await db.query(
-      "SELECT id, count FROM options WHERE question_id = ?",
+      "SELECT * FROM options WHERE question_id = ?",
       [req.params.questionId]
     );
-    res.json(options);
+    const [result] = await db.query(
+      "SELECT SUM(count) AS total_value FROM options WHERE question_id = ?",
+      [req.params.questionId]
+    );
+    const totalValue = result[0]?.total_value ?? 0;
+    const optionsMapped = options.map((o) => ({
+      ...o,
+      percentage: o?.count > 0 ? ((o?.count / totalValue) * 100).toFixed(2) : 0,
+    }));
+    res.json(optionsMapped);
   } catch (error) {
     res.status(500).json({ message: "Database error", error: error.message });
   }
